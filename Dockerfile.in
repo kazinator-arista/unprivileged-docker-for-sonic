@@ -1,0 +1,19 @@
+FROM ubuntu:20.04
+
+RUN apt-get update && \
+    apt-get install -y vim python3-pip sudo wget kmod docker.io && \
+    pip3 install j2cli && \
+    useradd -u $UID $USER && \
+    usermod -G docker -a $USER && \
+    usermod -G sudo -a $USER && \
+    echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+    chown -R $USER:$USER /var/cache
+
+VOLUME /var
+
+EXPOSE 2375
+
+WORKDIR $(pwd)
+
+USER $UID
+CMD ["/bin/bash", "-l"]
