@@ -201,7 +201,7 @@ docker_run()
       ( --privileged | --privileged=true )
         args=("${args[@]:0:i}" "${args[@]:i+1}")
         ;;
-      ( -d | --detach | --*=* | -i | -t | -it | --interactive | --tty | --rm )
+      ( -d | --detach | --*=* | -i | -t | -it | --interactive | --tty | --rm | --init )
         : $(( i++ ))
         ;;
       ( --* )
