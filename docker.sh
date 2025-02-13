@@ -183,6 +183,9 @@ docker_run()
                   args[i+1]="type=volume,source=var_volume,dst=$dst$mopts"
                 fi
                 ;;
+              ( $this_dir/* )
+                mkdir -p "$left"
+                ;;
             esac
             : $(( i += 2 ))
             ;;
