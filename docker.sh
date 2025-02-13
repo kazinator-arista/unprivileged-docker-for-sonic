@@ -15,6 +15,58 @@ docker()
   "$docker" "$@"
 }
 
+consolidate_docker_file_runs()
+{
+  local line=
+  local runs=
+
+  while IFS= read -r phys_line ; do
+    while true ; do
+      case $phys_line in
+        ( '  '* )
+           phys_line=${phys_line# *}
+           continue
+          ;;
+        ( '#'* )
+          ;;
+        ( *\\ )
+          line=$line${phys_line%\\}
+          ;;
+        ( * )
+          line=$line$phys_line
+          case $line in
+          ( 'RUN '* )
+            if [ -n "$runs" ] ; then
+              runs="$runs && ${line#RUN }"
+            else
+              runs="$line"
+            fi
+            ;;
+          ( '' )
+            if [ -z "$runs" ] ; then
+              printf '%s\n' "$line"
+            fi
+            ;;
+          ( * )
+            if [ -n "$runs" ] ; then
+              printf '%s\n' "$runs"
+              runs=
+            fi
+            printf '%s\n' "$line"
+            ;;
+          esac
+          line=
+      esac
+      break
+    done
+  done
+
+  if [ -n "$runs" ] ; then
+    printf '%s\n' "$runs"
+  fi
+  printf '%s\n' "$line"
+}
+
 docker_build() {
   local -a args=("$@")
   local dfile=
@@ -56,7 +108,7 @@ docker_build() {
 
   touch $tmp_dfile || docker_build_cleanup y
 
-  cp "$dfile" $tmp_dfile || docker_build_cleanup y
+  consolidate_docker_file_runs < "$dfile" > "$tmp_dfile" || docker_build_cleanup y
 
   if [ -z "$this_dir" ] ; then
     sed -e "s#^this_dir=#this_dir='$(realpath -P $(pwd))'#" \
