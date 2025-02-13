@@ -198,6 +198,9 @@ docker_run()
         local varg=${arg#*=}
         args=("${args[@]:0:i}" -v "$varg" "${args[@]:i+2}") 
         ;;
+      ( --privileged | --privileged=true )
+        args=("${args[@]:0:i}" "${args[@]:i+1}")
+        ;;
       ( -d | --detach | --*=* | -i | -t | -it | --interactive | --tty | --rm )
         : $(( i++ ))
         ;;
