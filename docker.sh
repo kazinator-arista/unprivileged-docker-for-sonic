@@ -204,7 +204,7 @@ docker_run()
       ( -d | --detach | --*=* | -i | -t | -it | --interactive | --tty | --rm | --init )
         : $(( i++ ))
         ;;
-      ( --* )
+      ( --* | -* )
         : $(( i += 2 ))
         ;;
       ( * )
