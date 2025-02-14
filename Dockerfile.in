@@ -1,3 +1,10 @@
+#
+# This is a template for generating a Dockerfile.
+# It is written in POSIX shell "here document" notation.
+# A rule in the accompanying Makefile expands it,
+# producing a Dockerfile. This lets us interpolate shell
+#
+
 FROM ubuntu:20.04
 
 RUN apt-get update && \
