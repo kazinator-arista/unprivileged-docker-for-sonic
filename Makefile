@@ -40,7 +40,7 @@ $(docker_image): Dockerfile
 # - We map a volume called var_volume to /var. In our Dockerfile, there is a
 #   VOLUME /var mount point for this. If var_volume does not exist, Docker will
 #   create it. This /var mount is absolutely crucial, because the
-#   sonic-management Dockerfiles map /var paths. Our docker.sh script
+#   sonic-buildimage Dockerfiles map /var paths. Our docker.sh script
 #   intercepts /var mounts, and rewrites them to refer to var_volume. This
 #   trick allows the inner Docker containers to map *our* var; without this
 #   they are requesting /var from our docker daemon and its environment.

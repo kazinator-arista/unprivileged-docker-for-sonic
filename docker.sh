@@ -51,7 +51,7 @@ docker()
 
 # Function consolidate_docker_file_runs(): optimize batches of RUN commands.
 #
-# sonic-management Dockerfiles contain some long sequences of simple RUN
+# sonic-buildimage Dockerfiles contain some long sequences of simple RUN
 # instrudctions which often only execute a single command, such as "apt-get
 # install package" or "pip3 install package". This is inefficient because each
 # RUN instruction creates an image layer, and runs in a new build-time
@@ -265,7 +265,7 @@ $last_user_line
 # Function docker_build(): wrap the docker run command
 #
 # The goal here is to do whatever it takes so that the docker containers
-# created by sonic-management run in the home-bus, or similar environment.
+# created by sonic-buildimage run in the home-bus, or similar environment.
 #
 # The environment is characterized by:
 # - lack of privilege: docker --privilege doesn't work
@@ -273,7 +273,7 @@ $last_user_line
 #   - docker containers created within, when requesting paths to be mounted,
 #     request them from the file namespace of our docker daemon, not
 #     our namespace.
-#     - in particular, this affects the /var/* mounts sonic-management wants
+#     - in particular, this affects the /var/* mounts sonic-buildimage wants
 docker_run()
 {
   # If we are running outside of our container, we go straight to the real
@@ -357,7 +357,7 @@ docker_run()
               # docker is running as root, and cannot manipulate non-root NFS
               # material. Requesting a nonexistent directory is likely
               # unintentinal. There is a $(mkdir -p ...) expression in one of
-              # the sonic-management Makefiles which should be
+              # the sonic-buildimage Makefiles which should be
               # $(shell mkdir -p ...).
               ( $this_dir/* )
                 mkdir -p "$left"
