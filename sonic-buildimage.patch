@@ -1,0 +1,63 @@
+diff --git a/rules/functions b/rules/functions
+index 44a6af3dd..a6984b854 100644
+--- a/rules/functions
++++ b/rules/functions
+@@ -168,15 +168,12 @@ endef
+ ## Setup overlay fs for dpkg admin directory /var/lib/dpkg
+ ###############################################################################
+ define SETUP_OVERLAYFS_FOR_DPKG_ADMINDIR
+-upperdir=$(shell mktemp -d -p $(DPKG_ADMINDIR_PATH))
+-workdir=$(shell mktemp -d -p $(DPKG_ADMINDIR_PATH))
+-mergedir=$(shell mktemp -d -p $(DPKG_ADMINDIR_PATH))
+-sudo mount -t overlay overlay -olowerdir=/var/lib/dpkg,upperdir=$$upperdir,workdir=$$workdir $$mergedir
+-export SONIC_DPKG_ADMINDIR=$$mergedir
+-trap "sudo umount $$mergedir && rm -rf $$mergedir $$upperdir $$workdir" EXIT
++copy=$(shell sudo mktemp -d /var/lib/dpkg-tmp-XXXXXXXXXX)
++sudo cp -a /var/lib/dpkg/. $$copy/.
++export SONIC_DPKG_ADMINDIR=$$copy
++trap "sudo rm -rf $$copy" EXIT
+ endef
+ 
+-
+ ###############################################################################
+ ## Manifest generation routine
+ ## TODO: changelog generation
+diff --git a/slave.mk b/slave.mk
+index f3d9ad3e2..f5e2c470c 100644
+--- a/slave.mk
++++ b/slave.mk
+@@ -1143,15 +1143,15 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
+ 
+ 		# Apply series of patches if exist
+ 		if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && ( quilt pop -a -f 1>/dev/null 2>&1 || true ) && QUILT_PATCHES=../$(notdir $($*.gz_PATH)).patch quilt push -a; popd; fi $(LOG)
+-		mkdir -p $($*.gz_PATH)/debs $(LOG)
+-		mkdir -p $($*.gz_PATH)/files $(LOG)
+-		mkdir -p $($*.gz_PATH)/python-debs $(LOG)
+-		mkdir -p $($*.gz_PATH)/python-wheels $(LOG)
++		rm -rf $($*.gz_PATH)/debs $(LOG)
++		rm -rf $($*.gz_PATH)/files $(LOG)
++		rm -rf $($*.gz_PATH)/python-debs $(LOG)
++		rm -rf $($*.gz_PATH)/python-wheels $(LOG)
+ 		mkdir -p $(TARGET_PATH)/vcache/$* $($*.gz_PATH)/vcache $(LOG)
+-		sudo mount --bind $($*.gz_DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
+-		sudo mount --bind $($*.gz_FILES_PATH) $($*.gz_PATH)/files $(LOG)
+-		sudo mount --bind $(PYTHON_DEBS_PATH) $($*.gz_PATH)/python-debs $(LOG)
+-		sudo mount --bind $(PYTHON_WHEELS_PATH) $($*.gz_PATH)/python-wheels $(LOG)
++		ln -sf $($*.gz_DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
++		ln -sf $($*.gz_FILES_PATH) $($*.gz_PATH)/files $(LOG)
++		ln -sf $(PYTHON_DEBS_PATH) $($*.gz_PATH)/python-debs $(LOG)
++		ln -sf $(PYTHON_WHEELS_PATH) $($*.gz_PATH)/python-wheels $(LOG)
+ 		# Export variables for j2. Use path for unique variable names, e.g. docker_orchagent_debs
+ 		export include_system_eventd="$(INCLUDE_SYSTEM_EVENTD)"
+ 		export build_reduce_image_size="$(BUILD_REDUCE_IMAGE_SIZE)"
+@@ -1230,8 +1230,8 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES)) : $(TARGET_PATH)/%-$(DBG_IMAG
+ 	# Skip building the target if it is already loaded from cache
+ 	if [ -z '$($*-$(DBG_IMAGE_MARK).gz_CACHE_LOADED)' ] ; then
+ 
+-		mkdir -p $($*.gz_PATH)/debs $(LOG)
+-		sudo mount --bind $($*.gz_DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
++		rm -rf $($*.gz_PATH)/debs $(LOG)
++		ln -sf $($*.gz_DEBS_PATH) $($*.gz_PATH)/debs $(LOG)
+ 		mkdir -p $(TARGET_PATH)/vcache/$*-dbg $($*.gz_PATH)/vcache $(LOG)
+ 		# Export variables for j2. Use path for unique variable names, e.g. docker_orchagent_debs
+ 		$(eval export $(subst -,_,$(notdir $($*.gz_PATH)))_dbg_debs=$(shell printf "$(subst $(SPACE),\n,$(call expand,$($*.gz_DBG_DEPENDS),RDEPENDS))\n" | awk '!a[$$0]++'))

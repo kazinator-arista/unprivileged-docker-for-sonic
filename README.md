@@ -9,6 +9,7 @@ steps have been successfully executed on Home Bus, using a `master` branch check
 `sonic-buildimage` from GitHub, without any patches applied.
 
 Further tweaking inside `sonic-buildimage` is required to execute actual build steps.
+See Sonic-Buildimage Patch section below.
 
 # How To Use
 
@@ -51,3 +52,28 @@ Also, `docker.sh` provides a side benefit:
    required to build the image, speeding up the `sonic-buildimage`
    `make configure` process.
 
+# Sonic-Buildimage Patch
+
+The file `sonic-buildimage.patch` contains a small number of changes
+to the makefiles `rules/functions` and `slave.mk`. These patches were
+made against commit `bb320c229ee7e381b18f60a2e91f37aa4fad5564`, dated
+February 4, on the `sonic-buildimage` `master` branch.
+
+The Sonic-Buildimage build system tries to perpetrate a few tricks
+which require superuser privilege. In one case, it wants to make one
+directory of Debian packages appear elsewhere using `mount --bind`. The patch
+changes this to just using a symbolic link.
+
+In another situation, the build system tries to set up a Linux
+overlayfs for a certain `dpkg` directory, such that the build system
+can make changes which can be rolled back. The patch changes the
+implementation to instead create a `cp -a` copy of the to-be-overlaid
+lower directory to a temporarly location, pointing the build system
+to that directory.
+
+With these changes, the `make PLATFORM=vs configure` step will pass,
+producing all the Debian-based docker images that the build needs.
+The actual build can be started. Where it fails is that the build
+wants to execute tests of the `libnl` package. Those tests require kernel
+privilege; they cannot be run in an unprivileged Docker container.
+A patch is needed to skip some (or all) of these tests.
